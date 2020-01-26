@@ -1,9 +1,54 @@
+# If you're using local dev and test, and not using an
+# orchestrator or docker enterprise + k8s, there's no reason
+# to use v3
+# v3 is for multi-node orchestration, swarm, k8s
+# v2 has some unique features not used in v3
 version: '2.0'
 
+# "Service" is one or more containers based on a single image
 services:
   web:
     image: sample-01
     build: .
+    # - means list
+    # ports are "published"
     ports:
       - "3000:3000"
 
+# docker-compose is for declarative docker definitions
+# docker is "batteries included, but swappable", has some useful defaults, but
+# are changable (like Dockerfile name)
+
+# docker-compose CLI version is not same as YAML version above
+
+# docker-compose up is the main command, does all the things, creates
+# all the volumes, networks, and starts containers, and -d is "detached"
+# mode to run in background
+# The first run is a build, but docker-compose up does NOT always
+# rebuil. --build flag will do that
+
+# docker-compose down stops and removes containers and networks,
+# but not volume data. Docker protects volume data by default
+# docker-compose down -v will wipe out volume data as well!
+
+# Most of the commands have "service" option at end which let you
+# run those commands for just that service
+# docker-compose:
+#    build: just build/rebuild
+#    stop: just stop container, don't delete
+#    ps: lists services, more benefits with docker-compose
+#    push, images to registry
+#    logs: all logs for all containers running (or service)
+#    exec: one-off commands inside containers
+
+# Docker gives you plumbing commands to delete images (from docker image ls) but
+# you can also just build --no-cache which will mean you don't have to delete
+# them
+
+# docker-compose ps (image) name "sample-02_web_1_da255..." separated by underscores
+# sample-02: name of project
+# web: service name
+# 1: numerical number of replica
+# ending is random number for uniqueness
+
+# docker-compose logs can take service name
