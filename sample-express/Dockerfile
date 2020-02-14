@@ -2,11 +2,15 @@ FROM node:10.15-slim
 
 ENV NODE_ENV=production
 
-WORKDIR /app
+# Start in parent directory...
+WORKDIR /node
 
 COPY package.json package-lock*.json ./
 
+# Install in parent directory
 RUN npm install && npm cache clean --force
+
+WORKDIR /node/app
 
 COPY . .
 

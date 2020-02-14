@@ -5,8 +5,24 @@ services:
     build: .
     ports:
       - 3000:3000
+    # Because we are binding mounting into container, the whole app, the
+    # current directory with NO node_modules gets put into container, so
+    # when app starts, no node_modules, and then error on startup from missing
+    # npm package
+
+    # If you run this on the host:
+    # docker-compose run express npm install
+    # It will run npm install inside the *container*
+    # This makes node_modules on the host the same as the ones in the container
+    # volumes:
+    #   - .:/app
     volumes:
-      - .:/app
+      - .:/node/app
+      # Hide the node_modules coming from the host:
+      # creates an anonymous volume at this location
+      # This is putting a *volume* inside of the *bind mount* (above)
+      - /node/app/test_dir
+      - /node/app/node_modules
     environment:
       - DEBUG=sample-express:*
 

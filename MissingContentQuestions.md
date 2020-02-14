@@ -6,3 +6,7 @@
 - secrets other than buildkit
 
 Buildkit section was weakest, feels tacked on
+
+Deployment on standard things like AWS? Digital Ocean?
+
+WHY install anything on the host?

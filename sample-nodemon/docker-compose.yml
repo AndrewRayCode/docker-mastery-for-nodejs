@@ -3,6 +3,16 @@ version: '2.4'
 services:
   express:
     build: .
+    # Need to pass in full path to nodemon. Env below
+    # is key, so that devDepencies are installed.
+    # Oh yeah, node_env=development npm install will
+    # install devDependnecies, but production wont.
+    # Overriding node_env below does that.
+    #
+    # He also does ENV PATH /app/node_modules/.bin/:$PATH
+    # To let him run nodemon or other commands without
+    # needing full path anywhere in image
+    command: /app/node_modules/.bin/nodemon ./bin/www
     ports:
       - 3000:3000
     volumes:
