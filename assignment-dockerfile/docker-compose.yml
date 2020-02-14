@@ -1,0 +1,8 @@
+version: '2.2'
+
+services:
+  api:
+    build: .
+    # init: true
+    ports:
+      - "4001:3000"

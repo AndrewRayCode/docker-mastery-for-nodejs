@@ -16,7 +16,9 @@ services:
       - 8090:2368
     # BAD: all ports are exposed in docker networks by default
     # so this does nothing. Note it's still good to have EXPOSE
-    # in dockerfile for better documentation
+    # in dockerfile for better documentation. Docker has this to expose
+    # containers to other containers on the same network, but that's the
+    # default now
     expose:
       - "2368"
     # BAD: see networks at bottom. A default network is already created, making
@@ -43,11 +45,14 @@ services:
     # directly from docker CLI (which is why people usually manually set 
     # container_name
     container_name: db
-    # BAD: see my-ghost:links above
+    # BAD: see my-ghost:links above, this is how containers used to be able
+    # to talk to each other, but compose now creates networks by default,
+    # all ports are open and "in DNS"
     links:
       - my-ghost
     # BAD: see networks at bottom. A default network is already created, making
-    # this one moot
+    # this one moot. Networks and bridge below are all default, no reason to
+    # add this in unless you're doing advanced networking
     networks:
       - ghostnetwork
     volumes:

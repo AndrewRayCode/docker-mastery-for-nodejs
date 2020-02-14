@@ -1,18 +1,27 @@
 # fill in the blanks to dockerize this node app
-FROM
+FROM node:12.14.1-alpine
 
-EXPOSE
+EXPOSE 3000
 
-RUN
+RUN apk update && apk add --no-cache tini
 
-WORKDIR
+WORKDIR /node
 
-COPY
+# LOL make this standard across company
+RUN mkdir app && chown -R node:node .
 
-RUN
+WORKDIR /node/app
 
-COPY
+COPY package.json package-lock.json* ./
 
-ENTRYPOINT
+USER node
 
-CMD
+RUN npm install && npm cache clean --force
+
+COPY . .
+
+# Can do this or init: true in dockerfile or run docker with --init to shim in
+# tini
+ENTRYPOINT ["/sbin/tini", "--"]
+
+CMD ["node", "app.js"]
