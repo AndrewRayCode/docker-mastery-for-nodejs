@@ -6,7 +6,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 COPY package*.json ./
 RUN npm install --only=production \
-    && npm cache clean --force
+  && npm cache clean --force
 ENV PATH /app/node_modules/.bin:$PATH
 
 # a dev and build-only stage. we don't need to 
@@ -16,6 +16,9 @@ ENV NODE_ENV=development
 RUN npm install --only=development
 CMD ["/app/node_modules/.bin/nodemon"]
 
+# Andy note: This is production setup covered in a 
+# later lecture, running tsc is only in production, never want
+# to run tsc to do a full build in local
 FROM dev as build
 COPY . .
 RUN tsc

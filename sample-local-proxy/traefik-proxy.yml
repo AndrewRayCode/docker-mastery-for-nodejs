@@ -2,8 +2,11 @@ version: '2.4'
 
 services:
 
+  # traefik is *only* a reverse proxy
   traefik:
+    # It has its own container
     image: traefik:1.7-alpine
+    # Mounts socket to listen for docker engine stuff
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
@@ -14,14 +17,18 @@ services:
       - --docker.watch
       - --api
       - --defaultentrypoints=http,https
+    # "labels" are you tell this to work
     labels:
       - traefik.port=8080
+      # traefik.localhost is what works in chrome, vcap is what works for other tools
       - traefik.frontend.rule=Host:traefik.localhost,traefik.vcap.me
 
+  # Services behind traefik
   nginx:
     image: nginx
     labels:
       - traefik.port=80
+      # Same thing for localhost in chrome
       - traefik.frontend.rule=Host:nginx.localhost,nginx.vcap.me
 
   ghost:

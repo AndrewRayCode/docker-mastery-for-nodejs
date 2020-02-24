@@ -10,11 +10,17 @@
             "name": "Docker Nodemon TypeScript Attach",
             // app path in container
             "remoteRoot": "/app",
+            // "localRoot": "${workspaceRoot}",
             // auto-reconnect to debugger when
             // nodemon restarts node after file change
             "restart": true,
+            // "protocol": "inspector"
             // path on host to typescript output js
-            "outFiles": ["${workspaceFolder}/dist/**/*.js"]
+            // "outFiles": ["${workspaceFolder}/dist/**/*.js"]
+            // BUSTED SHIT
+            "sourceMapPathOverrides": {
+                "/app/*": "${workspaceRoot}/*"
+            }
         }
     ]
 }

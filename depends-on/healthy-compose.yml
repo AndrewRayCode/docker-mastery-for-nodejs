@@ -1,18 +1,30 @@
 version: '2.4'
 
+# Overall this file is verifying the ports are open and responding to pings
+# In prod, you might do things like verify data actually exists in the database,
+# but you probably don't need that for local development
+
+# Docker-compose is the thing actually waiting
+
 services:
 
   frontend:
     image: nginx
     depends_on:
       api:
+        # This line is the magic, and the thing you're depending on, you need
+        # the health check!
         # this requires a compose file version => 2.3 and < 3.0
         condition: service_healthy
         
   api:
     image: node:alpine
     healthcheck:
+      # For example, curl. Note curl might not be in your app by default (it's
+      # in alpine)
       test: curl -f http://127.0.0.1
+    # Dependencies for API. service_healthy is checking the test: flag of the
+    # dependent services
     depends_on:
       postgres:
         condition: service_healthy
@@ -24,16 +36,19 @@ services:
   postgres:
     image: postgres
     healthcheck:
+      # built in postgres utility
       test: pg_isready -U postgres -h 127.0.0.1
 
   mongo:
     image: mongo
     healthcheck:
+      # uses mongo client
       test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
 
   mysql:
     image: mysql
     healthcheck:
+      # mysql ping
       test: mysqladmin ping -h 127.0.0.1
     environment:
       - MYSQL_ALLOW_EMPTY_PASSWORD=true

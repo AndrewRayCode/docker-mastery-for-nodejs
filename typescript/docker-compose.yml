@@ -7,6 +7,9 @@ services:
       target: dev
     ports:
       - "3000:3000"
+      # Debug port open, 9229 is node default
       - "9229:9229"
+    # Because whole app is mounted, and node_modules is dockerignore'd
+    # you have to npm install in the container
     volumes:
       - .:/app

@@ -2,6 +2,9 @@ version: '2.4'
 # this only shows dependency relationships
 # it won't wait for db to be ready before starting node
 
+# Bad initial example, or one you'll see on the internet a lot
+# This *will* solve DNS problem at least
+# see healthy-compose.yml in this folder for better
 services:
   node:
     image: node
