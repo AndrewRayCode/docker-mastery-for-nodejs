@@ -20,6 +20,8 @@ server.route({
 // do app logic here to determine if app is truly healthy
 // you should return 200 if healthy, and anything else will fail
 // if you want, you should be able to restrict this to localhost (include ipv4 and ipv6)
+// Maybe want to also check for files or permissions on machine, but should
+// still just be for local container
 server.route({
     method: 'GET',
     path: '/healthz',

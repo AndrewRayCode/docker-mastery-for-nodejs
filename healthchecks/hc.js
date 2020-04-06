@@ -1,3 +1,4 @@
+// This is what healthcheck could run
 var http = require("http");
 
 var options = {

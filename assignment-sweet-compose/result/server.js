@@ -87,6 +87,11 @@ app.get('/', function (req, res) {
   res.sendFile(path.resolve(__dirname + '/views/index.html'));
 });
 
+app.get('/toilet', function (req, res) {
+  console.log('toilet');
+  res.send('toilet')
+});
+
 server.listen(port, function () {
   var port = server.address().port;
   console.log('App running on port ' + port);

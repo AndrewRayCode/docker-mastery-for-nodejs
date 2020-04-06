@@ -70,7 +70,20 @@ CMD ["npm", "run", "int-test"]
 
 
 ## Stage 5 (security scanning and audit)
+# This is for audit / scan stuff
 FROM test as audit
+
+
+# Note about scanning: can lint dockerifle and docker-compose files themselves
+
+# When running in build systems, ci usually depends on exit codes of processes.
+# If docker-compose fails to do something, which one should it fail with?
+# Use --exit-code-from docker-compose flag to pick the target (service?)
+# it matters for
+
+# Docker Hub can do this and is its own lightweight CI solution. If you're using
+# bitbucket or github, it supports docker hub webhooks, and docker hub can
+# run specific docker commands, which is nice for open source
 
 RUN npm audit
 
@@ -91,3 +104,13 @@ RUN /microscanner $MICROSCANNER_TOKEN --continue-on-failure
 FROM source as prod
 
 CMD ["node", "./bin/www"]
+
+# Note on production tags:
+# :latest is just a convention, it's not special other than the fact that docker
+# will try to pull <name>:latest by default. But there's nothing saying it has
+# to be the newest version of the app.
+# When running docker on servers, don't use :latest. If it's going to run on a
+# server, the tag can never be used twice. Tag with timestamps or git timestamps
+# (favorite)
+# Reusing tags on servers (like :latest) makes it really hard to know what's
+# on what server, if that tag can be reused

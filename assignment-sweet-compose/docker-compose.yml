@@ -5,6 +5,11 @@ services:
     image: redis:alpine
     networks:
       - frontend
+    healthcheck:
+      test: redis-cli ping
+      interval: 5s
+      timeout: 5s
+      retries: 3
 
   db:
     image: postgres:9.6
@@ -12,6 +17,15 @@ services:
       - db-data:/var/lib/postgresql/data
     networks:
       - backend
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test: pg_isready -U postgres -h 127.0.0.1
+      interval: 5s
+      timeout: 5s
+      retries: 3
 
   vote:
     image: bretfisher/examplevotingapp_vote
@@ -19,20 +33,66 @@ services:
       - '5000:80'
     networks:
       - frontend
+    depends_on:
+      redis:
+        condition: service_healthy
+    labels:
+      - traefik.port=80
+      - traefik.frontend.rule=Host:vote.localhost
 
   result:
     build: 
       context: result
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./result:/app
+    command: nodemon --inspect=0.0.0.0:9229 ./server.js
     ports:
       - '5001:80'
+      - '9229:9229'
     networks:
       - backend
+    depends_on:
+      db:
+        condition: service_healthy
+    labels:
+      - traefik.port=80
+      - traefik.frontend.rule=Host:result.localhost
 
   worker:
     image: bretfisher/examplevotingapp_worker:java
     networks:
       - frontend
       - backend
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  proxy:
+    # The official v2 Traefik docker image
+    image: traefik:1.7-alpine
+    # Enables the web UI and tells Traefik to listen to docker
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+    command:
+      - --docker
+      - --docker.domain=traefik
+      - --docker.watch
+      - --api
+      - --defaultentrypoints=http,https
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - traefik.port=8080
+      - traefik.frontend.rule=Host:traefik.localhost
+    networks:
+      - backend
+      - frontend
 
 networks:
     frontend:

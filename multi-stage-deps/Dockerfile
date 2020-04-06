@@ -22,10 +22,12 @@ FROM base as dev
 
 ENV NODE_ENV=development
 
+# Not using npx? - Andy
 ENV PATH=/opt/node_modules/.bin:$PATH
 
 WORKDIR /opt
 
+# He says not wanting to garauntee CI functionality
 RUN npm install --only=development
 
 WORKDIR /opt/app
@@ -37,9 +39,11 @@ CMD ["nodemon", "./bin/www", "--inspect=0.0.0.0:9229"]
 # This gets our source code into builder
 # this stage starts from the first one and skips dev
 FROM base as prod
+# SKIPS second stage
 
 WORKDIR /opt/app
 
+# In local development we bind mount the code, so we don't need it in container
 COPY . .
 
 CMD ["node", "./bin/www"]
