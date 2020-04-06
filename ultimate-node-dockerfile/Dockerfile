@@ -39,14 +39,26 @@ RUN npm config list \
 # Note we don't copy here, because this is bind mounted
 FROM base AS dev
 
+# Needed to install phantomjs devdependency
+RUN apt-get update -qq && apt-get install -qy \
+    ca-certificates \
+    bzip2 \
+    curl \
+    libfontconfig \
+    --no-install-recommends
+
 ENV NODE_ENV=development
+
 ENV PATH /app/node_modules/.bin:$PATH
+
 RUN npm install --only=development
 
 CMD ["nodemon", "server.js", "--inspect=0.0.0.0:9229"]
 
 # Stage 2: Source
-# Get the source code into the image, for stages that won't have bind mounts
+# Get the source code into the image, for stages that won't have bind mounts.
+# This lets us only run the copy command once, and other stages can copy what
+# they need from this stage
 FROM base AS source
 
 COPY . .
@@ -55,15 +67,6 @@ COPY . .
 # For CI test running only, unit tests only, not e2e. This stage also should
 # not be depended on by any other stages
 FROM source AS test
-
-# NOTE: these apt dependencies are only needed
-# for testing. they shouldn't be in production
-RUN apt-get update -qq && apt-get install -qy \ 
-    ca-certificates \
-    bzip2 \
-    curl \
-    libfontconfig \
-    --no-install-recommends
 
 # Get dev dependencies into test since we need them
 COPY --from=dev /app/node_modules /app/node_modules
