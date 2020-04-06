@@ -1,4 +1,4 @@
-# Stage 0: Base stage. Set labels, ports, build args, and install production
+# Stage 1: Base stage. Set labels, ports, build args, and install production
 # dependencies
 FROM node:8-slim AS base
 
@@ -21,6 +21,8 @@ LABEL org.opencontainers.image.title="Hi how are you"
 LABEL org.opencontainers.image.description="I am descripkptkion"
 LABEL com.andyray.nodeversion=${NODE_VERSION}
 
+# Note assignment didn't call for USER node, but it should have
+
 EXPOSE 80
 
 ENV NODE_ENV production
@@ -35,7 +37,7 @@ RUN npm config list \
     && npm ci \
     && npm cache clean --force
 
-# Stage 1: Development.
+# Stage 2: Development.
 # Note we don't copy here, because this is bind mounted
 FROM base AS dev
 
@@ -51,25 +53,19 @@ ENV NODE_ENV=development
 
 ENV PATH /app/node_modules/.bin:$PATH
 
-RUN npm install --only=development
+RUN npm config list \
+    && npm install --only=development
 
 CMD ["nodemon", "server.js", "--inspect=0.0.0.0:9229"]
-
-# Stage 2: Source
-# Get the source code into the image, for stages that won't have bind mounts.
-# This lets us only run the copy command once, and other stages can copy what
-# they need from this stage
-FROM base AS source
-
-COPY . .
 
 # Stage 3: Test
 # For CI test running only, unit tests only, not e2e. This stage also should
 # not be depended on by any other stages
-FROM source AS test
+FROM dev AS test
 
-# Get dev dependencies into test since we need them
-COPY --from=dev /app/node_modules /app/node_modules
+# A copy command shouldn't be at the top of the Dockerfile, because
+# changing any file in source will bust whole cache
+COPY . .
 
 CMD ["npm", "test"]
 
@@ -79,10 +75,19 @@ FROM test AS audit
 
 RUN npm audit
 
-# Stage 5: Production
+# Stage 5: clean up
+# Remove files in this stage so the production image will be as
+# small as possible
+FROM test AS pre-prod
+RUN rm -rf ./tests ./node_modules
+
+# Stage 6: Production
 # Production! Last stage is always production stage, so if you forget to target
 # a stage, this works by default
-FROM source AS prod
+FROM base AS prod
+
+# Copy with --from doesn't obey working directory
+COPY --from=pre-prod /app /app
 
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost || exit 1
