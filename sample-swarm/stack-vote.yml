@@ -1,3 +1,4 @@
+# Changed to at least version 3, for swarm
 version: '3.7'
 
 # for more swarm examples see 
@@ -10,11 +11,13 @@ x-default-opts:
   &default-opts
   logging:
     options:
+      # limit max log size
       max-size: "1m"
 
 
 services:
-
+  # Web proxy in front of containers, swarm doesn't have built in ingress
+  # proxy / router, so this might be what you use
   traefik:
     <<: *default-opts
     image: traefik:1.7-alpine
@@ -65,17 +68,25 @@ services:
 
   result:
     <<: *default-opts
+    # Specific version of image
     image: bretfisher/examplevotingapp_result:stoppable
     networks:
       - backend
       - traefik-proxy
+    # How long docker will wait before it outright kills the application, increased
+    # to allow for all client conncetions to be killed
     stop_grace_period: 5m
+
+    # Specific to swarm
     deploy:
+      # two replicas
       replicas: 2
       labels: [APP=VOTING]
+      # Only update one at a time, and controls what happens if there's a failure
       update_config:
         parallelism: 1
         failure_action: rollback
+        # Starts new container before it tries to mess with existing ones
         order: start-first
       labels:
         - traefik.port=80

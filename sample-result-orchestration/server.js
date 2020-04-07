@@ -9,9 +9,13 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     methodOverride = require('method-override'),
     app = express(),
+
+    // Added to help stop http connections with "thin" packet
     stoppable = require('stoppable'),
     server = stoppable(require('http').Server(app)),
     io = require('socket.io')(server),
+
+    // for storiong socket.io connection
     redis = require('socket.io-redis');
 
 io.set('transports', ['polling']);
@@ -56,6 +60,7 @@ async.retry(
     if (err) {
       return console.error('Giving up');
     }
+    // Makes sure we're connected before we start getting requests
     console.log('Connected to db');
     dbConnected = true;
     getVotes(client);
@@ -101,6 +106,7 @@ app.get('/', function (req, res) {
   res.sendFile(path.resolve(__dirname + '/views/index.html'));
 });
 
+// Waits for DB
 app.get('/healthcheck', function (req, res) {
   // Docker and Swarm-style Healthcheck
   // "is this ready for connections or should it be replaced?"
@@ -120,6 +126,7 @@ app.get('/healthcheck', function (req, res) {
     }
 });
 
+// For readiness, K8s ready for connections for ingress connection
 app.get('/readiness', function (req, res) {
   // "is this container ready for incoming connections?"
   // Kubernetes uses this to determine if container is ready for
@@ -135,6 +142,7 @@ app.get('/readiness', function (req, res) {
   }
 });
 
+// am I live after readiness pastsw
 app.get('/liveness', function (req, res) {
   // "does this container work or does it need to be replaced?"
   // check your app internals for health, but maybe
@@ -160,9 +168,15 @@ process.on('SIGTERM', function onSigterm () {
 // shut down server
 function shutdown() {
   console.info('starting stoppable');
+
+  // looks like this is stoppable
   server.stop(); // this might take a while depending on connections
   console.info('starting pg pool end');
+
+  // turn off db connection, saying we're not ready for connections
   dbConnected = false;
+
+  // Stop db connection
   pool.end();
   console.info('exiting');
   process.exit();
